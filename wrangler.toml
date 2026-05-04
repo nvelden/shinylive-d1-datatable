@@ -1,0 +1,8 @@
+name = "shinylive-d1-datatable"
+compatibility_date = "2026-05-04"
+pages_build_output_dir = "./docs"
+
+[[d1_databases]]
+binding = "SQL_TABLE_DB"
+database_name = "shinylive-d1-datatable"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"

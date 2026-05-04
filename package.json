@@ -1,0 +1,13 @@
+{
+  "scripts": {
+    "export": "Rscript -e 'shinylive::export(appdir = \".\", destdir = \"docs\")'",
+    "d1:create": "wrangler d1 create shinylive-d1-datatable",
+    "d1:migrate:local": "wrangler d1 execute shinylive-d1-datatable --local --file=./migrations/0001_create_responses.sql",
+    "d1:migrate:remote": "wrangler d1 execute shinylive-d1-datatable --remote --file=./migrations/0001_create_responses.sql",
+    "pages:dev": "wrangler pages dev docs",
+    "pages:deploy": "wrangler pages deploy docs --project-name=shinylive-d1-datatable"
+  },
+  "devDependencies": {
+    "wrangler": "^4.87.0"
+  }
+}
