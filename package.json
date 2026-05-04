@@ -1,11 +1,16 @@
 {
   "scripts": {
-    "export": "Rscript -e 'shinylive::export(appdir = \".\", destdir = \"docs\")'",
+    "export": "Rscript scripts/export-shinylive.R",
+    "local:setup": "sh scripts/setup-local.sh",
     "d1:create": "wrangler d1 create shinylive-d1-datatable",
-    "d1:migrate:local": "wrangler d1 execute shinylive-d1-datatable --local --file=./migrations/0001_create_responses.sql",
-    "d1:migrate:remote": "wrangler d1 execute shinylive-d1-datatable --remote --file=./migrations/0001_create_responses.sql",
-    "pages:dev": "wrangler pages dev docs",
-    "pages:deploy": "wrangler pages deploy docs --project-name=shinylive-d1-datatable"
+    "d1:migrate:local": "wrangler d1 execute shinylive-d1-datatable --local --file=./migrations/0001_create_responses.sql --config=./worker/wrangler.toml",
+    "d1:migrate:remote": "wrangler d1 execute shinylive-d1-datatable --remote --file=./migrations/0001_create_responses.sql --config=./worker/wrangler.toml",
+    "worker:dev": "wrangler dev --config=./worker/wrangler.toml --port=8787",
+    "worker:deploy": "wrangler deploy --config=./worker/wrangler.toml",
+    "worker:secret": "wrangler secret put SHARED_SECRET --config=./worker/wrangler.toml",
+    "site:dev": "python3 -m http.server 8000 --directory docs",
+    "site:deploy": "wrangler pages deploy docs --project-name=shinylive-d1-datatable",
+    "cloudflare:deploy": "npm run d1:migrate:remote && npm run worker:deploy && npm run export && npm run site:deploy"
   },
   "devDependencies": {
     "wrangler": "^4.87.0"

@@ -75,12 +75,24 @@ appCSS <- "
 
 apiJavaScript <- "
 (function () {
-  const endpoint = '/api/responses';
+  // Replace with the deployed Worker URL after running `npm run worker:deploy`.
+  const WORKER_URL = 'https://REPLACE_WITH_WORKER_SUBDOMAIN.workers.dev';
+
+  // Soft barrier against random callers. Anyone who views the page source
+  // can read this value, so it is not a substitute for real authentication.
+  // Use the same value as the SHARED_SECRET set with `wrangler secret put`.
+  const SHARED_SECRET = 'REPLACE_WITH_SHARED_SECRET';
+
+  const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
+  const endpoint = (isLocal ? 'http://localhost:8787' : WORKER_URL) + '/api/responses';
 
   async function request(method, payload) {
     const options = {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-API-Key': SHARED_SECRET
+      },
       cache: 'no-store'
     };
 
@@ -154,7 +166,7 @@ apiJavaScript <- "
     }
   };
 
-  Shiny.addCustomMessageHandler('api-load', () => window.SqlTableApi.load());
+  Shiny.addCustomMessageHandler('api-load', _message => window.SqlTableApi.load());
   Shiny.addCustomMessageHandler('api-create', row => window.SqlTableApi.create(row));
   Shiny.addCustomMessageHandler('api-update', row => window.SqlTableApi.update(row));
   Shiny.addCustomMessageHandler('api-delete', rowIds => window.SqlTableApi.delete(rowIds));

@@ -17,3 +17,11 @@ db.sqlite
 *.sqlite3
 
 package-lock.json
+
+# Cloudflare Worker local state and secrets
+.wrangler/
+worker/.wrangler/
+worker/.dev.vars
+.dev.vars
+
+*.log

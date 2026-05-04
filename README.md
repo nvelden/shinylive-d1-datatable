@@ -1,33 +1,23 @@
 # Shinylive D1 DataTable
 
-An editable Shiny DataTable that runs in the browser with
-[Shinylive](https://posit-dev.github.io/r-shinylive/) and stores rows
-persistently in [Cloudflare D1](https://developers.cloudflare.com/d1/).
+> **Warning**
+> This example API is intentionally simple. For a public production app, add
+> authentication or Cloudflare Access before allowing writes.
 
-This example is designed for readers following a tutorial on moving an editable
-Shiny + SQLite table to a static Shinylive app with a small Cloudflare API.
+This is a small tutorial example showing an editable Shiny DataTable running in
+the browser with [Shinylive](https://posit-dev.github.io/r-shinylive/) and
+persisting rows through a [Cloudflare Worker](https://developers.cloudflare.com/workers/)
+backed by [Cloudflare D1](https://developers.cloudflare.com/d1/).
 
-## Architecture
-
-```text
-Browser
-  Shinylive app.R
-    -> fetch("/api/responses")
-      -> Cloudflare Pages Function
-        -> Cloudflare D1 database
-```
-
-The browser never receives database credentials. The D1 database is exposed to
-the Cloudflare Function through the `SQL_TABLE_DB` binding.
-
-## Files
+## Project Shape
 
 ```text
-app.R                              # Shinylive/Shiny app
-functions/api/responses.js         # Pages Function API
+app.R                              # Shinylive/Shiny DataTable app
+worker/src/index.js                # Worker API for row CRUD
+worker/wrangler.toml               # Worker + D1 binding template
 migrations/0001_create_responses.sql
-wrangler.toml                      # Cloudflare Pages + D1 config
-package.json                       # Wrangler helper scripts
+scripts/export-shinylive.R         # Clean Shinylive export helper
+scripts/setup-local.sh             # Local setup helper
 ```
 
 ## Prerequisites
@@ -35,7 +25,12 @@ package.json                       # Wrangler helper scripts
 - R with `shiny`, `DT`, `shinyjs`, and `shinylive`
 - Node.js 22 or newer
 - A Cloudflare account
-- Wrangler authenticated with Cloudflare
+
+Install the R packages if needed:
+
+```r
+install.packages(c("shiny", "DT", "shinyjs", "shinylive"))
+```
 
 Install the JavaScript dependency:
 
@@ -43,66 +38,92 @@ Install the JavaScript dependency:
 npm install
 ```
 
-## 1. Create a D1 Database
+This installs [Wrangler](https://developers.cloudflare.com/workers/wrangler/),
+Cloudflare's command line tool. The scripts in this project use Wrangler to run
+the local Worker, create and migrate D1 databases, set Worker secrets, deploy
+the Worker, and deploy the static Shinylive app to Cloudflare Pages.
+
+Log in to Cloudflare with Wrangler:
+
+```bash
+npx wrangler login
+```
+
+## Run Locally
+
+Run the local setup helper:
+
+```bash
+npm run local:setup
+```
+
+This creates `worker/.dev.vars` if it does not exist, creates and seeds the
+local D1 database, and exports the Shinylive app to `docs/`.
+
+Run the static app and Worker in separate terminals:
+
+```bash
+npm run site:dev
+npm run worker:dev
+```
+
+Open `http://localhost:8000`.
+
+## Deploy With Your Cloudflare Account
+
+Create a D1 database:
 
 ```bash
 npm run d1:create
 ```
 
-Wrangler prints a `database_id`. Copy that id into `wrangler.toml`:
+Wrangler prints a `database_id`. Copy it into `worker/wrangler.toml`:
 
 ```toml
-[[d1_databases]]
-binding = "SQL_TABLE_DB"
-database_name = "shinylive-d1-datatable"
-database_id = "your-database-id"
+database_id = "your-d1-database-id"
 ```
 
-Keep the binding name as `SQL_TABLE_DB`; the Function expects that exact name.
-
-## 2. Create and Seed the Table
-
-Run the migration against the remote D1 database:
+Choose a shared secret:
 
 ```bash
-npm run d1:migrate:remote
+openssl rand -hex 32
 ```
 
-The migration creates a `responses` table and inserts sample rows.
+Copy the value printed by `openssl`. Put that same value in both places:
 
-## 3. Export the Shinylive App
+- In `app.R`, replace `REPLACE_WITH_SHARED_SECRET`.
+- In Cloudflare, run this command and paste the same value when prompted:
 
 ```bash
-npm run export
+npm run worker:secret
 ```
 
-This writes the static app to `docs/`.
-
-## 4. Run Locally with Cloudflare Pages
+Deploy the Worker:
 
 ```bash
-npm run pages:dev
+npm run worker:deploy
 ```
 
-Open the local URL printed by Wrangler. The app calls `/api/responses`, and the
-Pages Function handles the database reads and writes.
+Wrangler prints a Worker URL. Copy it into `app.R` by replacing
+`https://REPLACE_WITH_WORKER_SUBDOMAIN.workers.dev`.
 
-## 5. Deploy
+If you change the Pages project name, update `ALLOWED_ORIGIN` in
+`worker/wrangler.toml` to match your Pages URL.
 
-Create a Cloudflare Pages project named `shinylive-d1-datatable`, then deploy:
+Run the deploy helper:
 
 ```bash
-npm run pages:deploy
+npm run cloudflare:deploy
 ```
 
-After deployment, the app is a static Shinylive site with persistent SQL-backed
-rows.
+This runs the remote D1 migration, deploys the Worker, exports the Shinylive
+app, and deploys the static site to Cloudflare Pages.
 
-## Security Notes
+Open the Pages URL printed by Wrangler.
 
-- Do not put Cloudflare API tokens, database credentials, or secret values in
-  `app.R`.
-- Do not commit `.env`, `.Renviron`, `rsconnect/`, local databases, generated
-  `docs/`, or `node_modules/`.
-- This example API is intentionally simple. For a public production app, add
-  authentication or Cloudflare Access before allowing writes.
+## Notes
+
+- Do not commit `worker/.dev.vars`, Cloudflare API tokens, database ids from a
+  private project, or generated `docs/` output.
+- `SHARED_SECRET` is visible in the browser because this is a static Shinylive
+  app. Treat it as a tutorial guard only, not real production authentication.

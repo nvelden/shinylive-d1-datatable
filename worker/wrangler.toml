@@ -1,0 +1,14 @@
+name = "shinylive-d1-datatable-api"
+main = "src/index.js"
+compatibility_date = "2026-05-04"
+
+[[d1_databases]]
+binding = "SQL_TABLE_DB"
+database_name = "shinylive-d1-datatable"
+database_id = "REPLACE_WITH_D1_DATABASE_ID"
+
+[vars]
+ALLOWED_ORIGIN = "https://shinylive-d1-datatable.pages.dev"
+
+# SHARED_SECRET is set with `wrangler secret put SHARED_SECRET`,
+# not in this file. For local dev, put it in worker/.dev.vars.

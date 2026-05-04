@@ -1,8 +1,3 @@
-const jsonHeaders = {
-  "content-type": "application/json; charset=utf-8",
-  "cache-control": "no-store"
-};
-
 const seedRows = [
   ["5086d970-bea3-11e9-ad23-91bad5638bcb", "14-08-2019", "Niels", "M", 31, "Hello World!"],
   ["443cdd8c-c014-11e9-bbe6-e73bd2ce8807", "14-08-2019", "Theo", "M", 26, "Great!"],
@@ -16,13 +11,58 @@ const seedRows = [
   ["4ac24aa2-c014-11e9-bbe6-e73bd2ce8807", "14-08-2019", "Sally", "M", 53, "Sucks!"]
 ];
 
-export async function onRequest(context) {
-  const { request, env } = context;
+export default {
+  async fetch(request, env) {
+    const cors = corsHeadersFor(env);
 
-  if (request.method === "OPTIONS") {
-    return new Response(null, { headers: jsonHeaders });
+    if (request.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: cors });
+    }
+
+    if (env.SHARED_SECRET) {
+      const presented = request.headers.get("x-api-key") || "";
+      if (!safeEquals(presented, env.SHARED_SECRET)) {
+        return withCors(jsonResponse({ error: "Unauthorized." }, 401), cors);
+      }
+    }
+
+    const response = await handle(request, env);
+    return withCors(response, cors);
   }
+};
 
+function corsHeadersFor(env) {
+  return {
+    "access-control-allow-origin": env.ALLOWED_ORIGIN || "*",
+    "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "access-control-allow-headers": "Content-Type, X-API-Key",
+    "access-control-max-age": "86400",
+    "vary": "origin"
+  };
+}
+
+function withCors(response, cors) {
+  const headers = new Headers(response.headers);
+  for (const [key, value] of Object.entries(cors)) {
+    headers.set(key, value);
+  }
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers
+  });
+}
+
+function safeEquals(a, b) {
+  if (a.length !== b.length) return false;
+  let result = 0;
+  for (let i = 0; i < a.length; i++) {
+    result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  }
+  return result === 0;
+}
+
+async function handle(request, env) {
   if (!env.SQL_TABLE_DB) {
     return errorResponse("Missing SQL_TABLE_DB D1 binding.", 500);
   }
@@ -219,7 +259,13 @@ function formatDate(date) {
 }
 
 function jsonResponse(data, status = 200) {
-  return new Response(JSON.stringify(data), { status, headers: jsonHeaders });
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store"
+    }
+  });
 }
 
 function errorResponse(message, status = 400) {
