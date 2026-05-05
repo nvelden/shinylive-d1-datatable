@@ -7,6 +7,10 @@ browser with [Shinylive](https://posit-dev.github.io/r-shinylive/), is hosted
 on GitHub Pages, and persists rows through a [Cloudflare Worker](https://developers.cloudflare.com/workers/)
 backed by [Cloudflare D1](https://developers.cloudflare.com/d1/).
 
+This is a 2026 update of a [2019 tutorial](https://www.nielsvandervelden.com/blog/editable-datatables-in-r-shiny-using-sql/)
+([repository](https://github.com/nvelden/sql_table)) that built the same table
+on a Shiny server with a local SQLite file.
+
 The Worker is the only thing that talks to D1. The browser sends a shared
 secret in an `X-API-Key` header. That secret is included in the static bundle,
 so it is a soft barrier against opportunistic abuse, not real authentication.
