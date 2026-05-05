@@ -1,5 +1,7 @@
 # Shinylive D1 DataTable
 
+**Live demo:** <https://nvelden.github.io/shinylive-d1-datatable/>
+
 A small example of an editable Shiny DataTable that runs entirely in the
 browser with [Shinylive](https://posit-dev.github.io/r-shinylive/), is hosted
 on GitHub Pages, and persists rows through a [Cloudflare Worker](https://developers.cloudflare.com/workers/)
