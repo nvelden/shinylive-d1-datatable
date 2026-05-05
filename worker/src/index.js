@@ -1,3 +1,7 @@
+// Safety cap: never let the table grow beyond this many rows. When an insert
+// pushes past it, the oldest rows are dropped to make room.
+const MAX_ROWS = 100;
+
 const seedRows = [
   ["5086d970-bea3-11e9-ad23-91bad5638bcb", "14-08-2019", "Niels", "M", 31, "Hello World!"],
   ["443cdd8c-c014-11e9-bbe6-e73bd2ce8807", "14-08-2019", "Theo", "M", 26, "Great!"],
@@ -143,6 +147,8 @@ async function createRow(db, input) {
     VALUES (?, ?, ?, ?, ?, ?)
   `).bind(row.row_id, row.date, row.name, row.sex, row.age, row.comment).run();
 
+  await enforceRowLimit(db);
+
   return jsonResponse({ ok: true, row_id: row.row_id }, 201);
 }
 
@@ -191,7 +197,27 @@ async function copyRows(db, rowIds) {
     copied += 1;
   }
 
+  await enforceRowLimit(db);
+
   return jsonResponse({ ok: true, copied });
+}
+
+async function enforceRowLimit(db) {
+  const { count } = await db.prepare(
+    "SELECT COUNT(*) AS count FROM responses"
+  ).first();
+
+  const excess = count - MAX_ROWS;
+  if (excess <= 0) return;
+
+  await db.prepare(`
+    DELETE FROM responses
+    WHERE row_id IN (
+      SELECT row_id FROM responses
+      ORDER BY created_at, row_id
+      LIMIT ?
+    )
+  `).bind(excess).run();
 }
 
 function normaliseRow(input, requireId = false) {

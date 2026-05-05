@@ -76,12 +76,12 @@ appCSS <- "
 apiJavaScript <- "
 (function () {
   // Replace with the deployed Worker URL after running `npm run worker:deploy`.
-  const WORKER_URL = 'https://REPLACE_WITH_WORKER_SUBDOMAIN.workers.dev';
+  const WORKER_URL = 'https://shinylive-d1-datatable-api.housing-bermuda.workers.dev';
 
   // Soft barrier against random callers. Anyone who views the page source
   // can read this value, so it is not a substitute for real authentication.
   // Use the same value as the SHARED_SECRET set with `wrangler secret put`.
-  const SHARED_SECRET = 'REPLACE_WITH_SHARED_SECRET';
+  const SHARED_SECRET = 'dbdba41c5ea4e71393dbe6ab4c5c8b0f103704ccde44616714b3af2021f08784';
 
   const isLocal = ['localhost', '127.0.0.1'].includes(window.location.hostname);
   const endpoint = (isLocal ? 'http://localhost:8787' : WORKER_URL) + '/api/responses';

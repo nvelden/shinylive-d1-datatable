@@ -6,7 +6,6 @@
 .Renviron
 
 node_modules/
-docs/
 deploy/
 tinydeploy/
 blog-drafts/
