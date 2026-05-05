@@ -22,5 +22,6 @@ package-lock.json
 worker/.wrangler/
 worker/.dev.vars
 .dev.vars
+worker/wrangler.toml
 
 *.log

@@ -4,11 +4,11 @@ compatibility_date = "2026-05-04"
 
 [[d1_databases]]
 binding = "SQL_TABLE_DB"
-database_name = "sql-table-shinylive"
-database_id = "REDACTED-D1-DATABASE-ID"
+database_name = "your-d1-database-name"
+database_id = "PASTE_YOUR_D1_DATABASE_ID_HERE"
 
 [vars]
-ALLOWED_ORIGIN = "https://nvelden.github.io"
+ALLOWED_ORIGIN = "https://<your-username>.github.io"
 
 # SHARED_SECRET is set with `wrangler secret put SHARED_SECRET`,
 # not in this file. For local dev, put it in worker/.dev.vars.
