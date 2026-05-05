@@ -14,9 +14,8 @@ on a Shiny server with a local SQLite file.
 The Worker is the only thing that talks to D1. The browser sends a shared
 secret in an `X-API-Key` header. That secret is included in the static bundle,
 so it is a soft barrier against opportunistic abuse, not real authentication.
-Use this pattern for tutorials, prototypes, hobby projects, or internal tools
-shared with people you trust. For production data, replace the shared secret
-with per-user authentication and add rate limiting.
+Use this pattern for tutorials and prototypes. For production data, replace
+the shared secret with per-user authentication and add rate limiting.
 
 ## Project layout
 
